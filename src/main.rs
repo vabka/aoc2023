@@ -1,4 +1,5 @@
 mod day1;
+mod day2;
 
 use std::error::Error;
 
@@ -14,6 +15,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     match (n.as_str(), p.as_str()) {
         ("1", "a") => println!("{}", day1::a(&mut file)),
         ("1", "b") => println!("{}", day1::b(&mut file)),
+        ("2", "a") => println!("{}", day2::a(&mut file)),
+        ("2", "b") => println!("{}", day2::b(&mut file)),
         _ => println!("Not solved yet!")
     };
     Ok(())
