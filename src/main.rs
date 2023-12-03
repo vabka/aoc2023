@@ -19,6 +19,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         ("2", "a") => println!("{}", day2::a(&mut file)),
         ("2", "b") => println!("{}", day2::b(&mut file)),
         ("3", "a") => println!("{}", day3::a(&mut file)),
+        ("3", "b") => println!("{}", day3::b(&mut file)),
         _ => println!("Not solved yet!")
     };
     Ok(())

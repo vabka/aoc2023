@@ -2,6 +2,21 @@ use std::collections::HashSet;
 use std::io::{BufRead, BufReader, Read};
 
 pub(crate) fn a(reader: &mut impl Read) -> u32 {
+    read_schematic(reader)
+        .iter_parts()
+        .fold(0, |a, b| a + b.part_no.iter().fold(0, |a, b| a + b.number))
+}
+
+
+pub(crate) fn b(reader: &mut impl Read) -> u32 {
+    read_schematic(reader)
+        .iter_parts()
+        .filter(|x| x.symbol == '*' && x.part_no.len() == 2)
+        .map(|x| x.part_no.iter().fold(1, |a, b| a * b.number))
+        .fold(0, |a, b| a + b)
+}
+
+fn read_schematic(reader: &mut impl Read) -> EngineSchema {
     BufReader::new(reader)
         .lines()
         .map(Result::ok)
@@ -10,8 +25,6 @@ pub(crate) fn a(reader: &mut impl Read) -> u32 {
             a.add_line(b);
             a
         })
-        .iter_parts()
-        .fold(0, |a, b| a + b.part_no.iter().fold(0, |a, b| a + b.number))
 }
 
 struct EngineSchema {
