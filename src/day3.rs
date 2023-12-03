@@ -201,7 +201,7 @@ impl<'engine_schema> Iterator for EnginePartIterator<'engine_schema> {
             let part_no = get_part_no(pos, self.schema);
             return Some(EnginePart {
                 part_no,
-                pos,
+                // pos,
                 symbol,
             });
         }
@@ -210,7 +210,7 @@ impl<'engine_schema> Iterator for EnginePartIterator<'engine_schema> {
 
 struct EnginePart {
     symbol: char,
-    pos: Position,
+    // pos: Position,
     part_no: HashSet<Number>,
 }
 

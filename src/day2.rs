@@ -22,7 +22,7 @@ fn parse_game(str: &str) -> Option<GameReport> {
     let sets = parts.next()?.split(';')
         .map(str::trim)
         .map(|s| {
-            let mut cubes = s.split(',').map(str::trim);
+            let cubes = s.split(',').map(str::trim);
             let mut blue = 0;
             let mut green = 0;
             let mut red = 0;
