@@ -25,6 +25,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         ("4", "a") => println!("{}", day4::a(&mut file)),
         ("4", "b") => println!("{}", day4::b(&mut file)),
         ("5", "a") => println!("{}", day5::a(&mut file).expect("Something went wrong in computations")),
+        ("5", "b") => println!("{}", day5::b(&mut file).expect("Something went wrong in computations")),
         _ => println!("Not solved yet!")
     };
     Ok(())

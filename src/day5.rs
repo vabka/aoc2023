@@ -8,14 +8,120 @@ pub fn a(reader: &mut impl Read) -> Option<u64> {
         // .inspect(|line| println!("> {line}"))
         ;
 
-    parse_almanac(&mut lines)
-        .and_then(|almanac| {
-            almanac.seeds.iter().map(|seed| almanac.get_location_by_seed(*seed)).min()
-        })
+    let Some((almanac, seed_numbers)) = parse_almanac(&mut lines) else {
+        return None;
+    };
+    let seeds = seed_numbers.into_iter();
+    seeds
+        .map(Into::into)
+        .map(|seed| almanac.get_location_by_seed(seed))
+        .min()
         .map(Into::into)
 }
 
-fn parse_almanac(lines: &mut impl Iterator<Item=String>) -> Option<Almanac> {
+pub fn b(reader: &mut impl Read) -> Option<u64> {
+    let mut lines = BufReader::new(reader).lines().map(Result::ok).filter_map(Id::id)
+        // .inspect(|line| println!("> {line}"))
+        ;
+    let Some((almanac, seed_numbers)) = parse_almanac(&mut lines) else {
+        return None;
+    };
+    let seeds = SeedsIterator::new(seed_numbers.into_iter()).enumerate()
+        .inspect(|(i, _)| {
+            if i % 1000000 == 0 { println!("{}M", i / 1000_000); }
+        })
+        .map(|(_, e)| e);
+    seeds
+        .map(Into::into)
+        .map(|seed| almanac.get_location_by_seed(seed))
+        .min()
+        .map(Into::into)
+}
+
+struct SeedsIterator<I> {
+    inner_iterator: I,
+    previous_seed: Option<u64>,
+    seeds_in_range_remaining: Option<u64>,
+}
+
+impl<I> SeedsIterator<I> {
+    fn new(inner: I) -> Self {
+        Self {
+            inner_iterator: inner,
+            previous_seed: None,
+            seeds_in_range_remaining: None,
+        }
+    }
+}
+
+impl<I: Iterator<Item=u64>> Iterator for SeedsIterator<I> {
+    type Item = Seed;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.previous_seed {
+            Some(previous_seed) => {
+                match self.seeds_in_range_remaining {
+                    Some(0) => {
+                        self.previous_seed = None;
+                        self.seeds_in_range_remaining = None;
+                        self.next()
+                    }
+                    Some(remaining) => {
+                        let next_seed = previous_seed + 1;
+                        self.previous_seed = Some(next_seed);
+                        self.seeds_in_range_remaining = Some(remaining - 1);
+                        Some(Seed(next_seed))
+                    }
+                    None => {
+                        let remaining = self.inner_iterator.next()?;
+                        self.seeds_in_range_remaining = Some(remaining);
+                        self.next()
+                    }
+                }
+            }
+            None => {
+                let range_start = self.inner_iterator.next()?;
+                self.previous_seed = Some(range_start - 1);
+                self.next()
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::day5::{Seed, SeedsIterator};
+
+    #[test]
+    fn test_iterator_empty() {
+        let source = vec![];
+        let result: Vec<_> = SeedsIterator::new(source.into_iter()).collect();
+        assert_eq!(result.len(), 0);
+    }
+
+    #[test]
+    fn test_iterator_zero() {
+        let source = vec![1, 0];
+        let result: Vec<_> = SeedsIterator::new(source.into_iter()).collect();
+        assert_eq!(result.len(), 0);
+    }
+
+    #[test]
+    fn test_iterator_single() {
+        let source = vec![1, 1];
+        let result: Vec<_> = SeedsIterator::new(source.into_iter()).collect();
+        assert_eq!(result, vec![Seed(1)]);
+    }
+
+    #[test]
+    fn test_iterator_complex() {
+        let source = vec![1, 3, 6, 2];
+        let result: Vec<_> = SeedsIterator::new(source.into_iter()).collect();
+        assert_eq!(result, vec![Seed(1), Seed(2), Seed(3), Seed(6), Seed(7)]);
+    }
+}
+
+fn parse_almanac(lines: &mut impl Iterator<Item=String>) -> Option<(Almanac, Vec<u64>)> {
     let seeds_line = lines.next()?;
     let seeds: Vec<_> = {
         let mut parts = seeds_line.splitn(2, ':');
@@ -68,7 +174,6 @@ fn parse_almanac(lines: &mut impl Iterator<Item=String>) -> Option<Almanac> {
         })
     }
     let almanac = Almanac::new(
-        seeds,
         parse_mapping(lines, "seed-to-soil map:")?,
         parse_mapping(lines, "soil-to-fertilizer map:")?,
         parse_mapping(lines, "fertilizer-to-water map:")?,
@@ -77,7 +182,7 @@ fn parse_almanac(lines: &mut impl Iterator<Item=String>) -> Option<Almanac> {
         parse_mapping(lines, "temperature-to-humidity map:")?,
         parse_mapping(lines, "humidity-to-location map:")?,
     );
-    Some(almanac)
+    Some((almanac, seeds))
 }
 
 
@@ -148,7 +253,7 @@ new_type!(u64, Humidity, Location);
 new_type!(u64, Location);
 
 struct Almanac {
-    seeds: Vec<Seed>,
+    // seeds: Vec<Seed>,
     seed_to_soil: Mapping<Seed, Soil>,
     // seed_to_soil_cache: HashMap<u64, u64>,
 
@@ -164,17 +269,16 @@ struct Almanac {
 }
 
 impl Almanac {
-    fn new(seeds: Vec<Seed>,
-           seed_to_soil: Mapping<Seed, Soil>,
-           soil_to_fertilizer: Mapping<Soil, Fertilizer>,
-           fertilizer_to_water: Mapping<Fertilizer, Water>,
-           water_to_light: Mapping<Water, Light>,
-           light_to_temperature: Mapping<Light, Temperature>,
-           temperature_to_humidity: Mapping<Temperature, Humidity>,
-           humidity_to_location: Mapping<Humidity, Location>,
+    fn new(
+        seed_to_soil: Mapping<Seed, Soil>,
+        soil_to_fertilizer: Mapping<Soil, Fertilizer>,
+        fertilizer_to_water: Mapping<Fertilizer, Water>,
+        water_to_light: Mapping<Water, Light>,
+        light_to_temperature: Mapping<Light, Temperature>,
+        temperature_to_humidity: Mapping<Temperature, Humidity>,
+        humidity_to_location: Mapping<Humidity, Location>,
     ) -> Self {
         Self {
-            seeds,
             seed_to_soil,
             soil_to_fertilizer,
             fertilizer_to_water,
