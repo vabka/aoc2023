@@ -136,28 +136,28 @@ impl Hand {
         pairs.sort_by(|(card_a, count_a), (card_b, count_b)| { count_b.cmp(count_a).then(card_b.cmp(card_a)) });
         match &pairs[..] {
             | [(_, 5)]
-            | [(Card::Joker, 4), (_, 1)]
+            | [(Card::Joker, 4), _]
             | [(_, 4), (Card::Joker, 1)]
             | [(Card::Joker, 3), (_, 2)]
             | [(_, 3), (Card::Joker, 2)]
             => Combo::FiveOfAKind,
 
-            | [(_, 4), (_, 1)]
-            | [(Card::Joker, 3), (_, 1), (_, 1)]
+            | [(_, 4), _]
+            | [(Card::Joker, 3), _, _]
             | [(_, 3), (_, 1), (Card::Joker, 1)]
-            | [(_, 2), (Card::Joker, 2), (_, 1)]
+            | [(_, 2), (Card::Joker, 2), _]
             => Combo::FourOfAKind,
 
             | [(_, 3), (_, 2)]
             | [(_, 2), (_, 2), (Card::Joker, 1)]
             => Combo::FullHouse,
 
-            | [(_, 3), (_, 1), (_, 1)]
-            | [(Card::Joker, 2), (_, 1), (_, 1), (_, 1)]
-            | [(_, 2), (_, 1), (_, 1), (Card::Joker, 1)]
+            | [(_, 3), _, _]
+            | [(Card::Joker, 2), _, _, _]
+            | [(_, 2), _, _, (Card::Joker, 1)]
             => Combo::ThreeOfAKind,
 
-            | [(_, 2), (_, 2), (_, 1)]
+            | [(_, 2), (_, 2), _]
             => Combo::TwoPair,
 
             | [(_, 2), _, _, _]
