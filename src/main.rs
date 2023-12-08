@@ -4,6 +4,7 @@ mod day3;
 mod day4;
 mod day5;
 mod day7;
+mod day8;
 
 use std::error::Error;
 
@@ -29,6 +30,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         ("5", "b") => println!("{}", day5::b(&mut file).expect("Something went wrong in computations")),
         ("7", "a") => println!("{}", day7::a(&mut file)),
         ("7", "b") => println!("{}", day7::b(&mut file)),
+        ("8", "a") => println!("{}", day8::a(&mut file).expect("Something went wrong in computations")),
+        ("8", "b") => println!("{}", day8::b(&mut file).expect("Something went wrong in computations")),
         _ => println!("Not solved yet!")
     };
     Ok(())
